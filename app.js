@@ -50,3 +50,51 @@ const updateBackground = (weatherCode, currentTime) => {
 
   document.body.classList.add(finalClass);
 };
+
+/* ======= STATE ======= */
+let currentUnit = 'C';
+let lastCoords = null;
+let lastCity = null;
+
+/* ======= HELPERS ======= */
+const showError = msg => {
+  errorBox.textContent = msg;
+  errorBox.classList.remove('hidden');
+  setTimeout(clearError, 5000);
+};
+const clearError = () => {
+  errorBox.textContent = '';
+  errorBox.classList.add('hidden');
+};
+const showTempAlert = msg => {
+  tempAlert.textContent = msg;
+  tempAlert.classList.remove('hidden');
+};
+const hideTempAlert = () => {
+  tempAlert.textContent = '';
+  tempAlert.classList.add('hidden');
+};
+
+/* ======= LOADER CONTROL ======= */
+const loaderOverlay = document.getElementById('loaderOverlay');
+
+const showLoader = () => loaderOverlay.classList.remove('hidden');
+const hideLoader = () => loaderOverlay.classList.add('hidden');
+
+const formatTemp = temp =>
+  currentUnit === 'C' ? Math.round(temp) : Math.round((temp * 9) / 5 + 32);
+
+function findNearestHourIndex(hourlyTimes, currentTime) {
+  const cur = new Date(currentTime).getTime();
+  let nearestIdx = 0;
+  let minDiff = Infinity;
+  hourlyTimes.forEach((t, i) => {
+    const diff = Math.abs(new Date(t).getTime() - cur);
+    if (diff < minDiff) {
+      minDiff = diff;
+      nearestIdx = i;
+    }
+  });
+  return nearestIdx;
+}
+
