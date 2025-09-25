@@ -248,3 +248,59 @@ const renderForecast = data => {
     forecastEl.appendChild(card);
   }
 };
+
+/* ======= ORCHESTRATION ======= */
+const searchCity = async city => {
+  clearError();
+  if (!city.trim()) return showError('Please enter a city name.');
+  showLoader();
+  try {
+    const loc = await fetchCoordsByCity(city);
+    const data = await fetchWeatherByCoords(loc.latitude, loc.longitude);
+    lastCoords = { lat: loc.latitude, lon: loc.longitude };
+    lastCity = loc.name;
+    localStorage.setItem('lastCity', loc.name);
+    renderCurrent(data, loc);
+    renderForecast(data);
+    saveRecent(loc.name);
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    hideLoader();
+  }
+};
+
+const searchByCoords = async (lat, lon) => {
+  showLoader();
+  try {
+    let loc = { name: 'Unknown', country: '' };
+    try {
+      const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
+      const geoRes = await fetch(nominatimUrl, {
+        headers: { 'User-Agent': 'weather-app/1.0' }
+      });
+      const geoData = await geoRes.json();
+      if (geoData && geoData.address) {
+        const addr = geoData.address;
+        const name =
+          addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || addr.state || "Unknown";
+        loc = { name, country: addr.country || '' };
+      }
+    } catch (geoErr) {
+      console.warn("⚠ Reverse geocoding failed:", geoErr.message);
+    }
+
+    const data = await fetchWeatherByCoords(lat, lon);
+    lastCoords = { lat, lon };
+    lastCity = loc.name;
+    renderCurrent(data, loc);
+    renderForecast(data);
+    saveRecent(loc.name);
+    searchInput.value = "";
+  } catch (err) {
+    console.error('searchByCoords error:', err);
+    showError('Unable to fetch location-based weather.');
+  } finally {
+    hideLoader();
+  }
+};
