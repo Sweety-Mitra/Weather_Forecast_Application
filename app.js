@@ -162,3 +162,29 @@ const pickIcon = code => {
   if ([95,96,99].includes(code)) return 'images/icons/thunder.png';
   return 'images/icons/cloudy.png';
 };
+
+/* ======= API CALLS ======= */
+const fetchCoordsByCity = async city => {
+  const res = await fetch(
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`
+  );
+  const data = await res.json();
+  if (!data.results || data.results.length === 0)
+    throw new Error('City not found');
+  return data.results[0];
+};
+
+const fetchCoordsSuggestions = async query => {
+  if (!query.trim()) return [];
+  const res = await fetch(
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5`
+  );
+  const data = await res.json();
+  return data.results || [];
+};
+
+const fetchWeatherByCoords = async (lat, lon) => {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=relativehumidity_2m,pressure_msl,cloudcover,uv_index,precipitation&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_sum,uv_index_max&timezone=auto`;
+  const res = await fetch(url);
+  return res.json();
+};
