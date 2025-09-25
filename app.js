@@ -304,3 +304,94 @@ const searchByCoords = async (lat, lon) => {
     hideLoader();
   }
 };
+
+/* ======= EVENTS ======= */
+searchForm.addEventListener('submit', e => {
+  e.preventDefault();
+  searchCity(searchInput.value);
+});
+
+geoBtn.addEventListener('click', () => {
+  if (!navigator.geolocation)
+    return showError('Geolocation not supported in this browser.');
+  navigator.geolocation.getCurrentPosition(
+    pos => searchByCoords(pos.coords.latitude, pos.coords.longitude),
+    () => showError('Unable to retrieve location. Please allow location access.')
+  );
+});
+
+recentDropdown.addEventListener('change', e => {
+  if (e.target.value) searchCity(e.target.value);
+});
+
+const unitThumb = document.getElementById('unitThumb');
+unitToggle.addEventListener('click', () => {
+  currentUnit = currentUnit === 'C' ? 'F' : 'C';
+  if (currentUnit === 'F') {
+    unitThumb.style.left = '4px';
+  } else {
+    unitThumb.style.left = 'calc(100% - 36px)';
+  }
+  if (lastCoords) {
+    fetchWeatherByCoords(lastCoords.lat, lastCoords.lon)
+      .then(data => {
+        renderCurrent(data, { name: lastCity, country: '' });
+        renderForecast(data);
+      })
+      .catch(err => showError(err.message));
+  }
+});
+
+/* ======= CITY SUGGESTIONS DROPDOWN ======= */
+searchInput.addEventListener('input', async () => {
+  const query = searchInput.value.trim();
+  if (query.length < 2) {
+    suggestionsBox.classList.add('hidden');
+    return;
+  }
+  const suggestions = await fetchCoordsSuggestions(query);
+  if (!suggestions.length) {
+    suggestionsBox.classList.add('hidden');
+    return;
+  }
+  suggestionsBox.innerHTML = '';
+  suggestions.forEach(loc => {
+    const item = document.createElement('div');
+    item.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer';
+    item.textContent = `${loc.name}${loc.country ? ', ' + loc.country : ''}`;
+    item.addEventListener('click', () => {
+      searchInput.value = loc.name;
+      suggestionsBox.classList.add('hidden');
+    });
+    suggestionsBox.appendChild(item);
+  });
+  suggestionsBox.classList.remove('hidden');
+});
+document.addEventListener('click', (e) => {
+  if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+    suggestionsBox.classList.add('hidden');
+  }
+});
+
+/* ======= INITIAL LOAD ======= */
+const initApp = () => {
+  showLoader();
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        searchByCoords(pos.coords.latitude, pos.coords.longitude)
+          .finally(() => hideLoader());
+      },
+      () => {
+        searchCity('London').finally(() => hideLoader());
+      },
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  } else {
+    searchCity('London').finally(() => hideLoader());
+  }
+  setTimeout(() => hideLoader(), 10000);
+};
+
+initApp();
+renderRecent();
