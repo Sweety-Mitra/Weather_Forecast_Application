@@ -31,6 +31,7 @@ const updateBackground = (weatherCode, currentTime) => {
 
   let bgClass = '';
 
+  // Map weather codes to types
   if ([0,1,2].includes(weatherCode)) bgClass = 'clear';
   else if (weatherCode === 3) bgClass = 'cloudy';
   else if ([45,48].includes(weatherCode)) bgClass = 'fog';
@@ -39,17 +40,21 @@ const updateBackground = (weatherCode, currentTime) => {
   else if ([95,96,99].includes(weatherCode)) bgClass = 'thunder';
   else bgClass = 'clear';
 
+  // Optional: hail
   if ([56,57,66,67].includes(weatherCode)) bgClass = 'hail';
 
   const finalClass = `${isDay ? 'bg-day' : 'bg-night'}-${bgClass}`;
 
+  // Remove previous bg classes
   document.body.classList.remove(
     'bg-day-clear','bg-day-cloudy','bg-day-rain','bg-day-snow','bg-day-thunder','bg-day-fog','bg-day-hail',
     'bg-night-clear','bg-night-cloudy','bg-night-rain','bg-night-snow','bg-night-thunder','bg-night-fog','bg-night-hail'
   );
 
+  // Add new background class
   document.body.classList.add(finalClass);
 };
+
 
 /* ======= STATE ======= */
 let currentUnit = 'C';
@@ -76,14 +81,17 @@ const hideTempAlert = () => {
 };
 
 /* ======= LOADER CONTROL ======= */
+// Loader shown while fetching API data
 const loaderOverlay = document.getElementById('loaderOverlay');
 
 const showLoader = () => loaderOverlay.classList.remove('hidden');
 const hideLoader = () => loaderOverlay.classList.add('hidden');
 
+// Converts raw temp into °C or °F depending on toggle
 const formatTemp = temp =>
   currentUnit === 'C' ? Math.round(temp) : Math.round((temp * 9) / 5 + 32);
 
+// Finds index of nearest hour in hourly API data
 function findNearestHourIndex(hourlyTimes, currentTime) {
   const cur = new Date(currentTime).getTime();
   let nearestIdx = 0;
@@ -99,6 +107,7 @@ function findNearestHourIndex(hourlyTimes, currentTime) {
 }
 
 /* ======= LOCAL STORAGE ======= */
+// Save searched city to localStorage (avoid duplicates)
 const saveRecent = city => {
   if (!city) return;
   const key = 'recentCities_v1';
@@ -110,6 +119,7 @@ const saveRecent = city => {
   renderRecent();
 };
 
+// Render dropdown of recent searches
 const renderRecent = () => {
   const key = 'recentCities_v1';
   const arr = JSON.parse(localStorage.getItem(key) || '[]');
@@ -119,11 +129,13 @@ const renderRecent = () => {
   }
   recentDropdown.innerHTML = '';
 
+   // Placeholder option
   const placeholder = document.createElement('option');
   placeholder.value = '';
   placeholder.textContent = 'Recent searches';
   recentDropdown.appendChild(placeholder);
 
+   // Add each recent city
   arr.forEach(city => {
     const opt = document.createElement('option');
     opt.value = city;
@@ -134,39 +146,65 @@ const renderRecent = () => {
 };
 
 /* ======= MAPPERS ======= */
+// Maps weather codes to human-readable descriptions
 const mapWeatherCode = code => {
   const codes = {
-    0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
-    45: 'Fog', 48: 'Rime fog',
-    51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
-    56: 'Light freezing drizzle', 57: 'Dense freezing drizzle',
-    61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain',
-    66: 'Light freezing rain', 67: 'Heavy freezing rain',
-    71: 'Slight snow', 73: 'Moderate snow', 75: 'Heavy snow',
+    0: 'Clear sky',
+    1: 'Mainly clear',
+    2: 'Partly cloudy',
+    3: 'Overcast',
+    45: 'Fog',
+    48: 'Rime fog',
+    51: 'Light drizzle',
+    53: 'Moderate drizzle',
+    55: 'Dense drizzle',
+    56: 'Light freezing drizzle',
+    57: 'Dense freezing drizzle',
+    61: 'Slight rain',
+    63: 'Moderate rain',
+    65: 'Heavy rain',
+    66: 'Light freezing rain',
+    67: 'Heavy freezing rain',
+    71: 'Slight snow',
+    73: 'Moderate snow',
+    75: 'Heavy snow',
     77: 'Snow grains',
-    80: 'Slight rain showers', 81: 'Moderate rain showers', 82: 'Violent rain showers',
-    85: 'Slight snow showers', 86: 'Heavy snow showers',
-    95: 'Thunderstorm', 96: 'Thunderstorm with slight hail', 99: 'Thunderstorm with heavy hail'
+    80: 'Slight rain showers',
+    81: 'Moderate rain showers',
+    82: 'Violent rain showers',
+    85: 'Slight snow showers',
+    86: 'Heavy snow showers',
+    95: 'Thunderstorm',
+    96: 'Thunderstorm with slight hail',
+    99: 'Thunderstorm with heavy hail'
   };
   return codes[code] || 'Overcast';
 };
 
 const pickIcon = code => {
-  if (code === 0) return 'images/icons/clear.png';
-  if (code === 1 || code === 2) return 'images/icons/partly-cloudy.png';
-  if (code === 3) return 'images/icons/cloudy.png';
-  if (code === 45 || code === 48) return 'images/icons/fog.png';
-  if ([51,53,55,56,57].includes(code)) return 'images/icons/drizzle.png';
-  if ([61,63,65,66,67,80,81,82].includes(code)) return 'images/icons/rain.png';
-  if ([71,73,75,77,85,86].includes(code)) return 'images/icons/snow.png';
-  if ([95,96,99].includes(code)) return 'images/icons/thunder.png';
-  return 'images/icons/cloudy.png';
+  if (code === 0) return 'images/icons/clear.png'; // Clear sky
+  if (code === 1 || code === 2) return 'images/icons/partly-cloudy.png'; // Partly cloudy
+  if (code === 3) return 'images/icons/cloudy.png'; // Overcast
+
+  if (code === 45 || code === 48) return 'images/icons/fog.png'; // Fog
+
+  if ([51, 53, 55, 56, 57].includes(code)) return 'images/icons/drizzle.png'; // Drizzle
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return 'images/icons/rain.png'; // Rain & showers
+
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return 'images/icons/snow.png'; // Snow & snow showers
+
+  if ([95, 96, 99].includes(code)) return 'images/icons/thunder.png'; // Thunderstorms
+
+  return 'images/icons/cloudy.png'; // Default fallback
 };
 
 /* ======= API CALLS ======= */
+// Get coordinates for city name
 const fetchCoordsByCity = async city => {
   const res = await fetch(
-    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+      city
+    )}&count=1`
   );
   const data = await res.json();
   if (!data.results || data.results.length === 0)
@@ -174,15 +212,21 @@ const fetchCoordsByCity = async city => {
   return data.results[0];
 };
 
+// Get multiple city suggestions for autocomplete
 const fetchCoordsSuggestions = async query => {
   if (!query.trim()) return [];
+
   const res = await fetch(
-    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5`
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+      query
+    )}&count=5`
   );
   const data = await res.json();
+
   return data.results || [];
 };
 
+// Get weather data by coordinates
 const fetchWeatherByCoords = async (lat, lon) => {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=relativehumidity_2m,pressure_msl,cloudcover,uv_index,precipitation&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_sum,uv_index_max&timezone=auto`;
   const res = await fetch(url);
@@ -190,13 +234,16 @@ const fetchWeatherByCoords = async (lat, lon) => {
 };
 
 /* ======= RENDERING ======= */
+// Display current weather on UI
 const renderCurrent = (data, location) => {
   const current = data.current_weather;
   if (!current) return;
 
+  // Update city + date
   cityNameEl.textContent = `${location.name || "Unknown"}${location.country ? ', ' + location.country : ''}`;
   dateTextEl.textContent = new Date(current.time).toLocaleString();
 
+  // Update main weather info
   const tempC = current.temperature;
   todayTempEl.textContent = formatTemp(tempC);
   tempUnitEl.textContent = currentUnit === 'C' ? '°C' : '°F';
@@ -206,6 +253,7 @@ const renderCurrent = (data, location) => {
   currentIcon.src = pickIcon(current.weathercode);
   currentIcon.alt = descriptionEl.textContent;
 
+  // find nearest hour for extra values
   if (data.hourly && data.hourly.time) {
     const idx = findNearestHourIndex(data.hourly.time, current.time);
     document.getElementById('humidity').textContent = data.hourly.relativehumidity_2m[idx] + '%';
@@ -222,6 +270,7 @@ const renderCurrent = (data, location) => {
     : hideTempAlert();
 };
 
+// Display forecast cards
 const renderForecast = data => {
   forecastEl.innerHTML = '';
   if (!data.daily || !data.daily.time) {
@@ -249,11 +298,13 @@ const renderForecast = data => {
   }
 };
 
+
 /* ======= ORCHESTRATION ======= */
+// Search city by name → fetch → render
 const searchCity = async city => {
   clearError();
   if (!city.trim()) return showError('Please enter a city name.');
-  showLoader();
+  showLoader(); //  Show loader
   try {
     const loc = await fetchCoordsByCity(city);
     const data = await fetchWeatherByCoords(loc.latitude, loc.longitude);
@@ -266,10 +317,11 @@ const searchCity = async city => {
   } catch (err) {
     showError(err.message);
   } finally {
-    hideLoader();
+    hideLoader(); // Always hide loader
   }
 };
 
+// Search weather by geolocation coordinates
 const searchByCoords = async (lat, lon) => {
   showLoader();
   try {
@@ -306,11 +358,13 @@ const searchByCoords = async (lat, lon) => {
 };
 
 /* ======= EVENTS ======= */
+// Search form submit
 searchForm.addEventListener('submit', e => {
   e.preventDefault();
   searchCity(searchInput.value);
 });
 
+// Geo button → use device location
 geoBtn.addEventListener('click', () => {
   if (!navigator.geolocation)
     return showError('Geolocation not supported in this browser.');
@@ -320,18 +374,26 @@ geoBtn.addEventListener('click', () => {
   );
 });
 
+// Dropdown for recent searches
 recentDropdown.addEventListener('change', e => {
   if (e.target.value) searchCity(e.target.value);
 });
 
+// Unit toggle (°C ↔ °F)
 const unitThumb = document.getElementById('unitThumb');
+
 unitToggle.addEventListener('click', () => {
+  // Toggle state
   currentUnit = currentUnit === 'C' ? 'F' : 'C';
+
+  // Animate thumb position
   if (currentUnit === 'F') {
-    unitThumb.style.left = '4px';
+    unitThumb.style.left = '4px'; // move to left
   } else {
-    unitThumb.style.left = 'calc(100% - 36px)';
+    unitThumb.style.left = 'calc(100% - 36px)'; // move to right
   }
+
+  // Re-fetch and update UI
   if (lastCoords) {
     fetchWeatherByCoords(lastCoords.lat, lastCoords.lon)
       .then(data => {
@@ -343,30 +405,42 @@ unitToggle.addEventListener('click', () => {
 });
 
 /* ======= CITY SUGGESTIONS DROPDOWN ======= */
+// Autocomplete for search input
 searchInput.addEventListener('input', async () => {
   const query = searchInput.value.trim();
+
   if (query.length < 2) {
     suggestionsBox.classList.add('hidden');
     return;
   }
+
   const suggestions = await fetchCoordsSuggestions(query);
+
   if (!suggestions.length) {
     suggestionsBox.classList.add('hidden');
     return;
   }
+
+  // Populate dropdown
   suggestionsBox.innerHTML = '';
   suggestions.forEach(loc => {
     const item = document.createElement('div');
     item.className = 'px-3 py-2 hover:bg-gray-100 cursor-pointer';
     item.textContent = `${loc.name}${loc.country ? ', ' + loc.country : ''}`;
+
+    // Only set input value, do NOT call searchCity
     item.addEventListener('click', () => {
-      searchInput.value = loc.name;
+      searchInput.value = loc.name; 
       suggestionsBox.classList.add('hidden');
     });
+
     suggestionsBox.appendChild(item);
   });
+
   suggestionsBox.classList.remove('hidden');
 });
+
+// Hide suggestions if clicking outside
 document.addEventListener('click', (e) => {
   if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
     suggestionsBox.classList.add('hidden');
@@ -375,21 +449,24 @@ document.addEventListener('click', (e) => {
 
 /* ======= INITIAL LOAD ======= */
 const initApp = () => {
-  showLoader();
+  showLoader(); // Show loader immediately
+
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       pos => {
         searchByCoords(pos.coords.latitude, pos.coords.longitude)
-          .finally(() => hideLoader());
+          .finally(() => hideLoader()); // Hide loader after data loads
       },
       () => {
-        searchCity('London').finally(() => hideLoader());
+        searchCity('London').finally(() => hideLoader()); // Hide loader even if using fallback city
       },
       { enableHighAccuracy: false, timeout: 10000 }
     );
   } else {
     searchCity('London').finally(() => hideLoader());
   }
+
+  // Fallback: ensure loader disappears after 10s max
   setTimeout(() => hideLoader(), 10000);
 };
 
