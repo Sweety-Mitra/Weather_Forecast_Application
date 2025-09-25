@@ -98,3 +98,38 @@ function findNearestHourIndex(hourlyTimes, currentTime) {
   return nearestIdx;
 }
 
+/* ======= LOCAL STORAGE ======= */
+const saveRecent = city => {
+  if (!city) return;
+  const key = 'recentCities_v1';
+  let arr = JSON.parse(localStorage.getItem(key) || '[]');
+  arr = arr.filter(c => c.toLowerCase() !== city.toLowerCase());
+  arr.unshift(city);
+  if (arr.length > maxRecent) arr = arr.slice(0, maxRecent);
+  localStorage.setItem(key, JSON.stringify(arr));
+  renderRecent();
+};
+
+const renderRecent = () => {
+  const key = 'recentCities_v1';
+  const arr = JSON.parse(localStorage.getItem(key) || '[]');
+  if (!Array.isArray(arr) || arr.length === 0) {
+    recentDropdown.classList.add('hidden');
+    return;
+  }
+  recentDropdown.innerHTML = '';
+
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = 'Recent searches';
+  recentDropdown.appendChild(placeholder);
+
+  arr.forEach(city => {
+    const opt = document.createElement('option');
+    opt.value = city;
+    opt.textContent = city;
+    recentDropdown.appendChild(opt);
+  });
+  recentDropdown.classList.remove('hidden');
+};
+
