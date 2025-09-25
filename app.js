@@ -188,3 +188,63 @@ const fetchWeatherByCoords = async (lat, lon) => {
   const res = await fetch(url);
   return res.json();
 };
+
+/* ======= RENDERING ======= */
+const renderCurrent = (data, location) => {
+  const current = data.current_weather;
+  if (!current) return;
+
+  cityNameEl.textContent = `${location.name || "Unknown"}${location.country ? ', ' + location.country : ''}`;
+  dateTextEl.textContent = new Date(current.time).toLocaleString();
+
+  const tempC = current.temperature;
+  todayTempEl.textContent = formatTemp(tempC);
+  tempUnitEl.textContent = currentUnit === 'C' ? '°C' : '°F';
+
+  descriptionEl.textContent = mapWeatherCode(current.weathercode);
+  windEl.textContent = current.windspeed + ' km/h';
+  currentIcon.src = pickIcon(current.weathercode);
+  currentIcon.alt = descriptionEl.textContent;
+
+  if (data.hourly && data.hourly.time) {
+    const idx = findNearestHourIndex(data.hourly.time, current.time);
+    document.getElementById('humidity').textContent = data.hourly.relativehumidity_2m[idx] + '%';
+    document.getElementById('pressure').textContent = data.hourly.pressure_msl[idx] + ' hPa';
+    document.getElementById('clouds').textContent = data.hourly.cloudcover[idx] + '%';
+    document.getElementById('uv').textContent = data.hourly.uv_index[idx];
+    document.getElementById('precip').textContent = data.hourly.precipitation[idx] + ' mm';
+  }
+
+  updateBackground(current.weathercode, current.time);
+
+  tempC > 40
+    ? showTempAlert(`Extreme temperature alert: ${Math.round(tempC)}°C — stay hydrated!`)
+    : hideTempAlert();
+};
+
+const renderForecast = data => {
+  forecastEl.innerHTML = '';
+  if (!data.daily || !data.daily.time) {
+    forecastEl.innerHTML = '<div class="p-4 text-gray-600">No forecast available.</div>';
+    return;
+  }
+
+  const days = data.daily.time;
+  for (let i = 1; i <= 5 && i < days.length; i++) {
+    const card = document.createElement('div');
+    card.className = 'p-3 card text-center';
+    card.innerHTML = `
+      <div class="font-semibold">${new Date(days[i]).toLocaleDateString(undefined, { weekday: 'short' })}</div>
+      <img src="${pickIcon(data.daily.weathercode[i])}" 
+           alt="${mapWeatherCode(data.daily.weathercode[i])}" 
+           class="mx-auto" />
+      <div class="text-xl font-bold">
+        ${formatTemp(data.daily.temperature_2m_max[i])}°${currentUnit} /
+        ${formatTemp(data.daily.temperature_2m_min[i])}°${currentUnit}
+      </div>
+      <div class="text-sm text-gray-600">Precip: ${data.daily.precipitation_sum[i]} mm</div>
+      <div class="text-sm text-gray-600">UV Max: ${data.daily.uv_index_max[i]}</div>
+    `;
+    forecastEl.appendChild(card);
+  }
+};
