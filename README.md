@@ -50,7 +50,14 @@ This app fetches real-time weather data using the [Open-Meteo API](https://open-
 
 ## 📦 Setup Instructions
 
-1. **Clone this repository**
+**Clone this repository**
    ```bash
    git clone https://github.com/Sweety-Mitra/Weather_Forecast_Application.git
    cd weather-forecast-app
+
+---
+
+## 🌐 Live Demo
+
+🔗 [Try the Weather Forecast App](https://yourusername.github.io/weather-forecast-app/)
+
