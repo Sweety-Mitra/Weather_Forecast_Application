@@ -5,6 +5,12 @@ This app fetches real-time weather data using the [Open-Meteo API](https://open-
 
 ---
 
+## 🌐 Live Demo
+
+🔗 [Try the Weather Forecast App](https://sweety-mitra.github.io/Weather_Forecast_Application/)
+
+---
+
 ## 🚀 Features
 
 ✅ **Current Weather Display**  
@@ -50,14 +56,7 @@ This app fetches real-time weather data using the [Open-Meteo API](https://open-
 
 ## 📦 Setup Instructions
 
-**Clone this repository**
+1. **Clone this repository**
    ```bash
    git clone https://github.com/Sweety-Mitra/Weather_Forecast_Application.git
    cd weather-forecast-app
-
----
-
-## 🌐 Live Demo
-
-🔗 [Try the Weather Forecast App](https://yourusername.github.io/weather-forecast-app/)
-
